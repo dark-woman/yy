@@ -21,6 +21,8 @@ var canvas = oCanvas.create({
 
 var items
 
+var item_clicked = false;
+
 $.getJSON("/api/v0/items" , function(data) {
 	items = data;
 
@@ -70,7 +72,21 @@ $.getJSON("/api/v0/items" , function(data) {
 			item.text.fill = '#0aa'
 			canvas.redraw();
 		})
+
+		item.circle.bind("dblclick", function () {
+			item_clicked = true
+			alert('Edit mode.');
+			console.log(this)
+		})
 	})
+})
+
+canvas.bind("dblclick", function () {
+	if(!item_clicked) {
+		alert('Create new item mode.');
+		console.log(this)
+	}
+	item_clicked = false
 })
 
 function put_json(item_id, json) {
