@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+
+<style type="text/css">
+</style>
+
+<script src="ocanvas.min.js"></script>
+<script src="jquery-2.0.0.min.js"></script>
+
+<body>
+
+<canvas id="canvas" width="2000" height="1400" style="width:1000px;height:700px;"></canvas>
+<div id="item_info"></div>
+
+<script type="text/javascript">
+var canvas = oCanvas.create({
+	canvas: "#canvas",
+	background: "rgba(0,0,0,1)"
+});
+
+var items
+
+$.getJSON("/api/v0/items" , function(data) {
+	items = data;
+
+	var coordinate_before_move = {x: 0, y: 0};
+
+	$.each(items, function(i, item) {
+		item.circle = canvas.display.arc({
+			x: canvas.width * 0.01 * item.feasibility, y: canvas.height * 0.01 * item.scale,
+			radius: item.motivation * 3,
+			fill: "rgba(255,255,255,1)",
+			start: 0,
+			end: 360,
+			stroke: "4px #fff",
+			text: item.title,
+		}).add().dragAndDrop({
+			start: function() {
+				coordinate_before_move = {x: item.circle.x, y: item.circle.y};
+			},
+			end: function() {
+				if( item.circle.x != coordinate_before_move.x || item.circle.y != coordinate_before_move.y ) {
+					console.log( Math.round(item.circle.x), Math.round(item.circle.y) )
+					put_json(item.id, {
+						feasibility: Math.round(item.circle.x * 100 / canvas.width),
+						scale: Math.round(item.circle.y * 100 / canvas.height),
+					})
+				} else {
+					console.log(item)
+				}
+			}
+		});
+
+		item.text = canvas.display.text({
+			origin: { x: "center", y: "center" },
+			font: "45px mplus-1c-light",
+			text: item.title,
+			fill: "#0aa",
+		})
+		item.circle.addChild(item.text);
+
+		item.circle.bind("mouseenter touchenter", function () {
+			item.circle.fill = '0aa';
+			item.text.fill = '#fff'
+			canvas.redraw();
+			$('#item_info').text('').append('title: ' + item.title + '<br>feasibility: ' + item.feasibility  );
+		}).bind("mouseleave touchleave", function () {
+			item.circle.fill = "rgba(255,255,255,1)";
+			item.text.fill = '#0aa'
+			canvas.redraw();
+		})
+	})
+})
+
+function put_json(item_id, json) {
+	$.ajax({
+		url: '/api/v0/items/' + item_id ,
+		type: 'PUT',
+		headers: {
+			'X-HTTP-Method-Override': 'PUT',
+			'Content-Type': 'application/json'
+		},
+		dataType: 'json',
+		data: JSON.stringify(json),
+	}).done(function() {
+		console.log('成功');
+		item = items[item_id-1]
+		canvas.display.arc({
+			x: item.circle.x, y: item.circle.y,
+			radius: item.circle.radius * 1.1,
+			start: 0,
+			end: 360,
+			stroke: "3px #fff"
+		}).add().fadeOut();
+	});
+}
+
+</script>
+</body>
+</html>
