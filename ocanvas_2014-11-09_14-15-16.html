@@ -19,19 +19,22 @@ var canvas = oCanvas.create({
 	background: "rgba(0,0,0,1)"
 });
 
-var items = [{title: 'たいとる', feasibility: 78, motivation: 88},
-						 {title: 'たいとる２', feasibility: 33, motivation: 58}]
+var items = [{title: '当事者意識の定量化', feasibility: 78, motivation: 88, scale: 30},
+						 {title: '読書メモ自動化', feasibility: 33, motivation: 58, scale: 70},
+						 {title: '飛行ペット開発', feasibility: 22, motivation: 28, scale: 20},
+						 {title: '日の出カフェ', feasibility: 53, motivation: 48, scale: 60},
+						]
 
 var coordinate_before_move = {x: 0, y: 0};
 
 $.each(items, function(i, item) {
 	item.circle = canvas.display.arc({
-		x: canvas.width * 0.01 * item.feasibility, y: canvas.height / 2,
+		x: canvas.width * 0.01 * item.feasibility, y: canvas.height * 0.01 * item.scale,
 		radius: item.motivation * 3,
 		fill: "rgba(255,255,255,1)",
 		start: 0,
 		end: 360,
-		stroke: "2px #fff",
+		stroke: "4px #fff",
 		text: item.title,
 	}).add().dragAndDrop({
 		start: function() {
@@ -45,7 +48,7 @@ $.each(items, function(i, item) {
 					radius: item.circle.radius * 1.1,
 					start: 0,
 					end: 0,
-					stroke: "2px #fff"
+					stroke: "8px #fff"
 				}).add().animate({
 					start: 0,
 					end: 360,
