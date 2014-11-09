@@ -60,11 +60,13 @@ $.each(items, function(i, item) {
 	item.circle.addChild(item.text);
 
 	item.circle.bind("mouseenter touchenter", function () {
-		item.circle.fill = "#e67e22";
+		item.circle.fill = '0aa';
+		item.text.fill = '#fff'
 		canvas.redraw();
 		$('#item_info').text('').append('title: ' + item.title + '<br>feasibility: ' + item.feasibility  );
 	}).bind("mouseleave touchleave", function () {
 		item.circle.fill = "rgba(255,255,255,1)";
+		item.text.fill = '#0aa'
 		canvas.redraw();
 	})
 })
