@@ -11,59 +11,55 @@
 <body>
 
 <canvas id="canvas" width='1000' height='730'></canvas>
-<div id="title"></div>
+<div id="item_info"></div>
 
 <script type="text/javascript">
 var canvas = oCanvas.create({
-	canvas: "#canvas", // 操作するCanvasタグを指定
+	canvas: "#canvas",
 	background: "rgba(0,0,0,1)"
 });
 
-data = [{title: 'たいとる', feasibility: 88, motivation: 58},
-				{title: 'たいとる２', feasibility: 13, motivation: 48}]
+var items = [{title: 'たいとる', feasibility: 88, motivation: 58},
+						 {title: 'たいとる２', feasibility: 13, motivation: 48}]
 
-var circles = [];
-var increase = true;
-
-$.each(data, function(i, circle) {
-	circles[i] = canvas.display.arc({
+$.each(items, function(i, item) {
+	item.circle = canvas.display.arc({
 		x: canvas.width / 2, y: canvas.height / 2,
-		radius: canvas.width / 5,
+		radius: canvas.width / 10,
 		fill: "rgba(255,255,255,1)",
 		start: 0,
 		end: 360,
 		stroke: "1px #fff"
 	}).add().dragAndDrop({
 		end: function() {
-			console.log( Math.round(circles[i].x), Math.round(circles[i].y) )
-			var hoge = canvas.display.arc({
-				x: circles[i].x, y: circles[i].y,
-				radius: canvas.width / 4.6,
+			console.log( Math.round(item.circle.x), Math.round(item.circle.y) )
+			item.progress_bar = canvas.display.arc({
+				x: item.circle.x, y: item.circle.y,
+				radius: canvas.width / 9,
 				start: 0,
 				end: 0,
 				stroke: "1px #fff"
 			}).add().animate({
 				start: 0,
 				end: 360,
-			}, 1000, function() {
+			}, 3000, function() {
 				this.fadeOut();
 			});
 		}
 	});
 
-	circles[i].bind("mouseenter touchenter", function () {
-		circles[i].fill = "#e67e22";
+	item.circle.bind("mouseenter touchenter", function () {
+		item.circle.fill = "#e67e22";
 		canvas.redraw();
-		$('#title').text('').append('title: ' + data[i].title + '<br>feasibility: ' + data[i].feasibility  );
-		console.log(canvas)
+		$('#item_info').text('').append('title: ' + item.title + '<br>feasibility: ' + item.feasibility  );
 	}).bind("mouseleave touchleave", function () {
-		circles[i].fill = "rgba(255,255,255,1)";
+		item.circle.fill = "rgba(255,255,255,1)";
 		canvas.redraw();
 	})
 })
 
 // var increase = true;
-// circles[0].bind("click tap", function () {
+// item[0].circle.bind("click tap", function () {
 // 	if (increase) {
 // 		increase = false;
 // 		this.stop().animate({
