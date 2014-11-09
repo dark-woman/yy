@@ -10,7 +10,7 @@
 
 <body>
 
-<canvas id="canvas" width='1000' height='730'></canvas>
+<canvas id="canvas" width="2000" height="1400" style="width:1000px;height:700px;"></canvas>
 <div id="item_info"></div>
 
 <script type="text/javascript">
@@ -25,11 +25,11 @@ var items = [{title: 'たいとる', feasibility: 78, motivation: 88},
 $.each(items, function(i, item) {
 	item.circle = canvas.display.arc({
 		x: canvas.width * 0.01 * item.feasibility, y: canvas.height / 2,
-		radius: item.motivation,
+		radius: item.motivation * 3,
 		fill: "rgba(255,255,255,1)",
 		start: 0,
 		end: 360,
-		stroke: "1px #fff",
+		stroke: "2px #fff",
 		text: item.title,
 	}).add().dragAndDrop({
 		end: function() {
@@ -39,7 +39,7 @@ $.each(items, function(i, item) {
 				radius: item.circle.radius * 1.1,
 				start: 0,
 				end: 0,
-				stroke: "1px #fff"
+				stroke: "2px #fff"
 			}).add().animate({
 				start: 0,
 				end: 360,
@@ -53,7 +53,7 @@ $.each(items, function(i, item) {
 		// x: 0,
 		// y: 0,
 		origin: { x: "center", y: "center" },
-		font: "bold 30px mplus-1c-thin",
+		font: "45px mplus-1c-light",
 		text: item.title,
 		fill: "#0aa",
 	})
