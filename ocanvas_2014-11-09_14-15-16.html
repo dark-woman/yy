@@ -22,6 +22,8 @@ var canvas = oCanvas.create({
 var items = [{title: 'たいとる', feasibility: 78, motivation: 88},
 						 {title: 'たいとる２', feasibility: 33, motivation: 58}]
 
+var coordinate_before_move = {x: 0, y: 0};
+
 $.each(items, function(i, item) {
 	item.circle = canvas.display.arc({
 		x: canvas.width * 0.01 * item.feasibility, y: canvas.height / 2,
@@ -32,20 +34,27 @@ $.each(items, function(i, item) {
 		stroke: "2px #fff",
 		text: item.title,
 	}).add().dragAndDrop({
+		start: function() {
+			coordinate_before_move = {x: item.circle.x, y: item.circle.y};
+		},
 		end: function() {
-			console.log( Math.round(item.circle.x), Math.round(item.circle.y) )
-			item.progress_bar = canvas.display.arc({
-				x: item.circle.x, y: item.circle.y,
-				radius: item.circle.radius * 1.1,
-				start: 0,
-				end: 0,
-				stroke: "2px #fff"
-			}).add().animate({
-				start: 0,
-				end: 360,
-			}, 3000, function() {
-				this.fadeOut();
-			});
+			if( item.circle.x != coordinate_before_move.x || item.circle.y != coordinate_before_move.y ) {
+				console.log( Math.round(item.circle.x), Math.round(item.circle.y) )
+				item.progress_bar = canvas.display.arc({
+					x: item.circle.x, y: item.circle.y,
+					radius: item.circle.radius * 1.1,
+					start: 0,
+					end: 0,
+					stroke: "2px #fff"
+				}).add().animate({
+					start: 0,
+					end: 360,
+				}, 3000, function() {
+					this.fadeOut();
+				});
+			} else {
+				console.log(item)
+			}
 		}
 	});
 
