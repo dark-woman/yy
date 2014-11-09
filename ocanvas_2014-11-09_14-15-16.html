@@ -19,23 +19,24 @@ var canvas = oCanvas.create({
 	background: "rgba(0,0,0,1)"
 });
 
-var items = [{title: 'たいとる', feasibility: 88, motivation: 58},
-						 {title: 'たいとる２', feasibility: 13, motivation: 48}]
+var items = [{title: 'たいとる', feasibility: 78, motivation: 88},
+						 {title: 'たいとる２', feasibility: 33, motivation: 58}]
 
 $.each(items, function(i, item) {
 	item.circle = canvas.display.arc({
-		x: canvas.width / 2, y: canvas.height / 2,
-		radius: canvas.width / 10,
+		x: canvas.width * 0.01 * item.feasibility, y: canvas.height / 2,
+		radius: item.motivation,
 		fill: "rgba(255,255,255,1)",
 		start: 0,
 		end: 360,
-		stroke: "1px #fff"
+		stroke: "1px #fff",
+		text: item.title,
 	}).add().dragAndDrop({
 		end: function() {
 			console.log( Math.round(item.circle.x), Math.round(item.circle.y) )
 			item.progress_bar = canvas.display.arc({
 				x: item.circle.x, y: item.circle.y,
-				radius: canvas.width / 9,
+				radius: item.circle.radius * 1.1,
 				start: 0,
 				end: 0,
 				stroke: "1px #fff"
@@ -47,6 +48,16 @@ $.each(items, function(i, item) {
 			});
 		}
 	});
+
+	item.text = canvas.display.text({
+		// x: 0,
+		// y: 0,
+		origin: { x: "center", y: "center" },
+		font: "bold 30px mplus-1c-thin",
+		text: item.title,
+		fill: "#0aa",
+	})
+	item.circle.addChild(item.text);
 
 	item.circle.bind("mouseenter touchenter", function () {
 		item.circle.fill = "#e67e22";
