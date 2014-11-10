@@ -43,7 +43,6 @@ $.getJSON("/api/v0/items" , function(data) {
 			},
 			end: function() {
 				if( item.circle.x != coordinate_before_move.x || item.circle.y != coordinate_before_move.y ) {
-					console.log( Math.round(item.circle.x), Math.round(item.circle.y) )
 					put_json(item.id, {
 						feasibility: Math.round(item.circle.x * 100 / canvas.width),
 						scale: Math.round(item.circle.y * 100 / canvas.height),
@@ -116,7 +115,6 @@ function put_json(item_id, json) {
 		dataType: 'json',
 		data: JSON.stringify(json),
 	}).done(function() {
-		console.log('成功');
 		item = items[item_id-1]
 		canvas.display.arc({
 			x: item.circle.x, y: item.circle.y,
@@ -130,7 +128,6 @@ function put_json(item_id, json) {
 
 function mousewheel (event) {
 	event.preventDefault();
-	console.log(event.wheelDeltaY, hovered_item)
 	if (hovered_item.circle.radius > 200)
 		hovered_item.circle.radius = 199;
 	else if (hovered_item.circle.radius > 15)
