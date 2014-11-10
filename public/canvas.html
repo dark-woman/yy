@@ -66,7 +66,13 @@ $.getJSON("/api/v0/items" , function(data) {
 			item.circle.fill = '0aa';
 			item.text.fill = '#fff'
 			canvas.redraw();
-			$('#item_info').text('').append('title: ' + item.title + '<br>feasibility: ' + item.feasibility  );
+			$('#item_info').text('').append(
+				'title: ' + item.title +
+				'<br>detail: ' + item.detail +
+				'<br>feasibility: ' + item.feasibility +
+				'<br>motivation: ' + item.motivation +
+				'<br>scale: ' + item.scale
+				);
 			hovered_item = item;
 			radius_on_mouse = hovered_item.circle.radius;
 			window.addEventListener('mousewheel', mousewheel, false);
