@@ -20,6 +20,7 @@ var canvas = oCanvas.create({
 var items
 
 var item_clicked = false;
+var hovered_item;
 
 $.getJSON("/api/v0/items" , function(data) {
 	items = data;
@@ -65,10 +66,17 @@ $.getJSON("/api/v0/items" , function(data) {
 			item.text.fill = '#fff'
 			canvas.redraw();
 			$('#item_info').text('').append('title: ' + item.title + '<br>feasibility: ' + item.feasibility  );
+			hovered_item = item;
+			window.addEventListener('mousewheel', mousewheel, false);
 		}).bind("mouseleave touchleave", function () {
+			put_json(item.id, {
+						motivation: Math.round( item.circle.radius / 3 )
+					})
 			item.circle.fill = "rgba(255,255,255,1)";
 			item.text.fill = '#0aa'
 			canvas.redraw();
+			hovered_item = null;
+			window.removeEventListener('mousewheel', mousewheel, false);
 		})
 
 		item.circle.bind("dblclick", function () {
@@ -108,6 +116,19 @@ function put_json(item_id, json) {
 			stroke: "3px #fff"
 		}).add().fadeOut();
 	});
+}
+
+function mousewheel (event) {
+	event.preventDefault();
+	console.log(event.wheelDeltaY, hovered_item)
+	if (hovered_item.circle.radius > 200)
+		hovered_item.circle.radius = 199;
+	else if (hovered_item.circle.radius > 15)
+		hovered_item.circle.radius += event.wheelDeltaY;
+	else
+		hovered_item.circle.radius = 16;
+	canvas.redraw();
+	return false;
 }
 
 </script>
