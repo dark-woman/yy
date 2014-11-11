@@ -36,13 +36,17 @@ $.getJSON("/api/v0/items" , function(data) {
 	})
 })
 
+var pathProto = canvas.display.ellipse({ stroke: "3px #999" });
+
 function create_circle (item) {
-	item.circle = canvas.display.arc({
+	var path = pathProto.clone({
+		radius: item.motivation * 3.5,
+	});
+
+	item.circle = canvas.display.ellipse({
 		x: canvas.width * 0.01 * item.feasibility, y: canvas.height * 0.01 * item.scale,
 		radius: item.motivation * 3,
 		fill: "rgba(255,255,255,1)",
-		start: 0,
-		end: 360,
 		stroke: "4px #fff",
 		text: item.title,
 	}).add().dragAndDrop({
@@ -59,7 +63,7 @@ function create_circle (item) {
 				console.log(item)
 			}
 		}
-	});
+	}).addChild(path);
 
 	item.text = canvas.display.text({
 		origin: { x: "center", y: "center" },
