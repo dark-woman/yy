@@ -20,103 +20,139 @@ var canvas = oCanvas.create({
 	background: "rgba(0,0,0,1)"
 });
 
-var items
+var items;
 
 var item_clicked = false;
 var hovered_item;
 var last_hovered_item;
 var radius_on_mouse;
+var coordinate_before_move = {x: 0, y: 0};
 
 $.getJSON("/api/v0/items" , function(data) {
 	items = data;
 
-	var coordinate_before_move = {x: 0, y: 0};
-
 	$.each(items, function(i, item) {
-		item.circle = canvas.display.arc({
-			x: canvas.width * 0.01 * item.feasibility, y: canvas.height * 0.01 * item.scale,
-			radius: item.motivation * 3,
-			fill: "rgba(255,255,255,1)",
-			start: 0,
-			end: 360,
-			stroke: "4px #fff",
-			text: item.title,
-		}).add().dragAndDrop({
-			start: function() {
-				coordinate_before_move = {x: item.circle.x, y: item.circle.y};
-			},
-			end: function() {
-				if( item.circle.x != coordinate_before_move.x || item.circle.y != coordinate_before_move.y ) {
-					put_json(item.id, {
-						feasibility: Math.round(item.circle.x * 100 / canvas.width),
-						scale: Math.round(item.circle.y * 100 / canvas.height),
-					})
-				} else {
-					console.log(item)
-				}
-			}
-		});
-
-		item.text = canvas.display.text({
-			origin: { x: "center", y: "center" },
-			font: "45px mplus-1c-light",
-			text: item.title,
-			fill: "#0aa",
-		})
-		item.circle.addChild(item.text);
-
-		item.circle.bind("mouseenter touchenter", function () {
-			item.circle.fill = '0aa';
-			item.text.fill = '#fff'
-			canvas.redraw();
-			$('.title').text(item.title);
-			$('.detail').text(item.detail);
-			hovered_item = item;
-			last_hovered_item = item;
-			radius_on_mouse = hovered_item.circle.radius;
-			window.addEventListener('mousewheel', mousewheel, false);
-		}).bind("mouseleave touchleave", function () {
-			if (radius_on_mouse != item.circle.radius){
-				put_json(item.id, {
-					motivation: Math.round( item.circle.radius / 3 )
-				})
-			}
-			item.circle.fill = "rgba(255,255,255,1)";
-			item.text.fill = '#0aa'
-			canvas.redraw();
-			hovered_item = null;
-			window.removeEventListener('mousewheel', mousewheel, false);
-		})
-
-		item.circle.bind("dblclick", function () {
-			item_clicked = true
-			edit($('.detail'));
-			edit($('.title'));
-			console.log(this)
-		})
+		create_circle(item)
 	})
 })
 
+function create_circle (item) {
+	item.circle = canvas.display.arc({
+		x: canvas.width * 0.01 * item.feasibility, y: canvas.height * 0.01 * item.scale,
+		radius: item.motivation * 3,
+		fill: "rgba(255,255,255,1)",
+		start: 0,
+		end: 360,
+		stroke: "4px #fff",
+		text: item.title,
+	}).add().dragAndDrop({
+		start: function() {
+			coordinate_before_move = {x: item.circle.x, y: item.circle.y};
+		},
+		end: function() {
+			if( item.circle.x != coordinate_before_move.x || item.circle.y != coordinate_before_move.y ) {
+				put_json(item, {
+					feasibility: Math.round(item.circle.x * 100 / canvas.width),
+					scale: Math.round(item.circle.y * 100 / canvas.height),
+				})
+			} else {
+				console.log(item)
+			}
+		}
+	});
+
+	item.text = canvas.display.text({
+		origin: { x: "center", y: "center" },
+		font: "45px mplus-1c-light",
+		text: item.title,
+		fill: "#0aa",
+	})
+	item.circle.addChild(item.text);
+
+	item.circle.bind("mouseenter touchenter", function () {
+		item.circle.fill = '0aa';
+		item.text.fill = '#fff'
+		canvas.redraw();
+		$('.title').text(item.title);
+		$('.detail').text(item.detail);
+		hovered_item = item;
+		last_hovered_item = item;
+		radius_on_mouse = hovered_item.circle.radius;
+		window.addEventListener('mousewheel', mousewheel, false);
+	}).bind("mouseleave touchleave", function () {
+		if (radius_on_mouse != item.circle.radius){
+			put_json(item, {
+				motivation: Math.round( item.circle.radius / 3 )
+			})
+		}
+		item.circle.fill = "rgba(255,255,255,1)";
+		item.text.fill = '#0aa'
+		canvas.redraw();
+		hovered_item = null;
+		window.removeEventListener('mousewheel', mousewheel, false);
+	})
+
+	item.circle.bind("dblclick", function () {
+		item_clicked = true
+		edit(item);
+		console.log(this)
+	})
+
+	return item;
+}
+
 canvas.bind("dblclick", function () {
 	if(!item_clicked) {
-		alert('Create new item mode.');
+		item = create_circle({ title: 'title',
+													 feasibility: canvas.mouse.x * 100 / canvas.width,
+													 scale: canvas.mouse.y * 100 / canvas.height,
+													 motivation: 50,});
+		$('.title, .detail').text('');
+		edit(item);
 		console.log(this)
 	}
 	item_clicked = false
 })
 
-function put_json(item_id, json) {
+function put_json(item, json) {
+	if (item.id === undefined) {
+		post_json(item, json)
+	} else {
+		$.ajax({
+			url: '/api/v0/items/' + item.id ,
+			type: 'PUT',
+			headers: {
+				'X-HTTP-Method-Override': 'PUT',
+				'Content-Type': 'application/json'
+			},
+			dataType: 'json',
+			data: JSON.stringify(json),
+		}).done(function() {
+			canvas.display.arc({
+				x: item.circle.x, y: item.circle.y,
+				radius: item.circle.radius * 1.1,
+				start: 0,
+				end: 360,
+				stroke: "3px #fff"
+			}).add().fadeOut();
+		});
+	}
+}
+
+function post_json(item, json) {
+	json.motivation = Math.round(item.motivation);
+	json.feasibility = Math.round(item.feasibility);
+	json.scale = Math.round(item.scale);
 	$.ajax({
-		url: '/api/v0/items/' + item_id ,
-		type: 'PUT',
+		url: '/api/v0/items/new' ,
+		type: 'POST',
 		headers: {
-			'X-HTTP-Method-Override': 'PUT',
+			'X-HTTP-Method-Override': 'POST',
 			'Content-Type': 'application/json'
 		},
 		dataType: 'json',
 		data: JSON.stringify(json),
 	}).done(function() {
-		item = items[item_id-1];
 		canvas.display.arc({
 			x: item.circle.x, y: item.circle.y,
 			radius: item.circle.radius * 1.1,
@@ -147,23 +183,26 @@ var toggleInput = function(e) {
 	edit(e);
 };
 
-function edit(dom) {
-	var originalContent = dom.text();
+function edit(item) {
+	var el;
+	$.each([$('.detail'), $('.title')], function (i, dom) {
+		var originalContent = dom.text();
 
-	dom.addClass("infoEditing");
-	dom.data("originalContent", originalContent);
-	var el = document.createElement("input"), $el = $(el);
-	$el.attr({type: "text", value: originalContent});
-	$el.css("fontSize", dom.css("fontSize"));
-	dom.empty();
-	dom.append(el);
-	$el.focus();
+		dom.addClass("infoEditing");
+		dom.data("originalContent", originalContent);
+		el = document.createElement("input"), $el = $(el);
+		$el.attr({type: "text", value: originalContent});
+		$el.css("fontSize", dom.css("fontSize"));
+		dom.empty();
+		dom.append(el);
+		$el.focus();
 
-	$el.keypress(function(e) {
-		if (e.which == 13) {
-			post(dom);
-		}
-	});
+		$el.keypress(function(e) {
+			if (e.which == 13) {
+				post(dom);
+			}
+		});
+	})
 
 	var resetContent = function(e) {
 		var td = $(e.target).parent();
@@ -175,13 +214,13 @@ function edit(dom) {
 	var post = function (dom) {
 		var title = $('.title').children('input').val();
 		var detail = $('.detail').children('input').val();
-		put_json(last_hovered_item.id, {
+		put_json(item, {
 			title: title,
 			detail: detail,
 		})
 		$('.title').text(title);
 		$('.detail').text(detail);
-		last_hovered_item.text.text = $('.title').text();
+		item.text.text = $('.title').text();
 		$(dom).removeData("originalContent");
 		$(dom).removeClass("infoEditing");
 		return false;

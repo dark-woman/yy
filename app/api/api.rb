@@ -12,11 +12,6 @@ class API < Grape::API
     def allowed_params
       ActionController::Parameters.new(params).permit(ALLOWED_PARAMS)
     end
-
-    params :allow_title do requires :title, type: String end
-    params :allow_feasibility do requires :feasibility, type: Integer end
-    params :allow_motivation do requires :motivation, type: Integer end
-    params :allow_scale do requires :scale, type: Integer end
   end
 
   resource :items do
@@ -28,9 +23,11 @@ class API < Grape::API
       Item.find(params[:id])
     end
 
+    post 'new' do
+      Item.create(allowed_params)
+    end
+
     put ':id' do
-      params { use :allow_title, :allow_feasibility, :allow_motivation, :allow_scale }
-      # sleep 0.25
       Item.find(params[:id]).update!(allowed_params)
     end
   end
