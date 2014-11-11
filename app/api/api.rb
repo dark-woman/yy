@@ -6,7 +6,7 @@ class API < Grape::API
     error_response({ message: e.message })
   end
 
-  ALLOWED_PARAMS = [:title, :feasibility, :motivation, :scale].freeze
+  ALLOWED_PARAMS = [:title, :detail, :feasibility, :motivation, :scale].freeze
 
   helpers do
     def allowed_params

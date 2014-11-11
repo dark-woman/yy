@@ -9,7 +9,10 @@
 <body>
 
 <canvas id="canvas" width="2000" height="1400" style="width:1000px;height:700px;"></canvas>
-<div id="item_info"></div>
+<div id="item_info">
+	title: <span class="title"></span><br>
+	detail: <span class="detail"></span>
+</div>
 
 <script type="text/javascript">
 var canvas = oCanvas.create({
@@ -21,6 +24,7 @@ var items
 
 var item_clicked = false;
 var hovered_item;
+var last_hovered_item;
 var radius_on_mouse;
 
 $.getJSON("/api/v0/items" , function(data) {
@@ -65,14 +69,10 @@ $.getJSON("/api/v0/items" , function(data) {
 			item.circle.fill = '0aa';
 			item.text.fill = '#fff'
 			canvas.redraw();
-			$('#item_info').text('').append(
-				'title: ' + item.title +
-				'<br>detail: ' + item.detail +
-				'<br>feasibility: ' + item.feasibility +
-				'<br>motivation: ' + item.motivation +
-				'<br>scale: ' + item.scale
-				);
+			$('.title').text(item.title);
+			$('.detail').text(item.detail);
 			hovered_item = item;
+			last_hovered_item = item;
 			radius_on_mouse = hovered_item.circle.radius;
 			window.addEventListener('mousewheel', mousewheel, false);
 		}).bind("mouseleave touchleave", function () {
@@ -90,7 +90,8 @@ $.getJSON("/api/v0/items" , function(data) {
 
 		item.circle.bind("dblclick", function () {
 			item_clicked = true
-			alert('Edit mode.');
+			edit($('.detail'));
+			edit($('.title'));
 			console.log(this)
 		})
 	})
@@ -115,7 +116,7 @@ function put_json(item_id, json) {
 		dataType: 'json',
 		data: JSON.stringify(json),
 	}).done(function() {
-		item = items[item_id-1]
+		item = items[item_id-1];
 		canvas.display.arc({
 			x: item.circle.x, y: item.circle.y,
 			radius: item.circle.radius * 1.1,
@@ -136,6 +137,61 @@ function mousewheel (event) {
 		hovered_item.circle.radius = 16;
 	canvas.redraw();
 	return false;
+}
+
+$(".title, .detail").dblclick(function() {
+	edit($(this));
+})
+
+var toggleInput = function(e) {
+	edit(e);
+};
+
+function edit(dom) {
+	var originalContent = dom.text();
+
+	dom.addClass("infoEditing");
+	dom.data("originalContent", originalContent);
+	var el = document.createElement("input"), $el = $(el);
+	$el.attr({type: "text", value: originalContent});
+	$el.css("fontSize", dom.css("fontSize"));
+	dom.empty();
+	dom.append(el);
+	$el.focus();
+
+	$el.keypress(function(e) {
+		if (e.which == 13) {
+			post(dom);
+		}
+	});
+
+	var resetContent = function(e) {
+		var td = $(e.target).parent();
+		td.text(td.data("originalContent"));
+		td.removeData("originalContent");
+		td.removeClass("infoEditing");
+	};
+
+	var post = function (dom) {
+		var title = $('.title').children('input').val();
+		var detail = $('.detail').children('input').val();
+		put_json(last_hovered_item.id, {
+			title: title,
+			detail: detail,
+		})
+		$('.title').text(title);
+		$('.detail').text(detail);
+		last_hovered_item.text.text = $('.title').text();
+		$(dom).removeData("originalContent");
+		$(dom).removeClass("infoEditing");
+		return false;
+	}
+
+	$el.keydown(function(e) {
+		if (e.which == 27) {
+			resetContent(e);
+		}
+	});
 }
 
 </script>
