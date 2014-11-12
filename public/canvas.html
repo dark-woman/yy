@@ -103,7 +103,7 @@ function add_mouseover_listener (item) {
 		hovered_item = item;
 		last_hovered_item = item;
 		radius_on_mouse = hovered_item.circle.radius;
-		window.addEventListener('mousewheel', mousewheel, false);
+		window.addEventListener('mousewheel', resize_circle, false);
 	}).bind("mouseleave touchleave", function () {
 		if (radius_on_mouse != item.circle.radius){
 			put_json(item, {
@@ -114,7 +114,7 @@ function add_mouseover_listener (item) {
 		item.text.fill = '#0aa'
 		canvas.redraw();
 		hovered_item = null;
-		window.removeEventListener('mousewheel', mousewheel, false);
+		window.removeEventListener('mousewheel', resize_circle, false);
 	})
 }
 
@@ -179,7 +179,7 @@ function add_orbit_to(item) {
 	}).add().fadeOut();
 }
 
-function mousewheel (event) {
+function resize_circle (event) {
 	event.preventDefault();
 	var	circle = hovered_item.circle;
 	if (circle.radius > 200)
@@ -190,6 +190,15 @@ function mousewheel (event) {
 		circle.radius = 16;
 	circle.children[0].radius = circle.radius * 3.5 / 3
 	canvas.redraw();
+
+	//put_json automatically when the mouse still on the circle
+	clearTimeout($.data(this, 'timer'));
+	$.data(this, 'timer', setTimeout(function() {
+		put_json(hovered_item, {
+			motivation: Math.round( hovered_item.circle.radius / 3 )
+		})
+	}, 250));
+
 	return false;
 }
 
