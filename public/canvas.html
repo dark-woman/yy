@@ -43,6 +43,17 @@ function create_circle (item) {
 		radius: item.motivation * 3.5,
 	});
 
+	display_circle(item);
+	item.circle.addChild(path);
+	add_drag_and_drop_listener(item)
+	add_text(item);
+	add_mouseover_listener(item);
+	add_doubleclick_listener(item);
+
+	return item;
+}
+
+function display_circle (item) {
 	item.circle = canvas.display.arc({
 		x: canvas.width * 0.01 * item.feasibility, y: canvas.height * 0.01 * item.scale,
 		radius: item.motivation * 3,
@@ -51,7 +62,21 @@ function create_circle (item) {
 		end: 360,
 		stroke: "4px #fff",
 		text: item.title,
-	}).add().dragAndDrop({
+	})
+}
+
+function add_text (item) {
+	item.text = canvas.display.text({
+		origin: { x: "center", y: "center" },
+		font: "45px mplus-1c-light",
+		text: item.title,
+		fill: "#0aa",
+	})
+	item.circle.addChild(item.text);
+}
+
+function add_drag_and_drop_listener (item) {
+	item.circle.add().dragAndDrop({
 		start: function() {
 			coordinate_before_move = {x: item.circle.x, y: item.circle.y};
 		},
@@ -65,16 +90,10 @@ function create_circle (item) {
 				console.log(item)
 			}
 		}
-	}).addChild(path);
-
-	item.text = canvas.display.text({
-		origin: { x: "center", y: "center" },
-		font: "45px mplus-1c-light",
-		text: item.title,
-		fill: "#0aa",
 	})
-	item.circle.addChild(item.text);
+}
 
+function add_mouseover_listener (item) {
 	item.circle.bind("mouseenter touchenter", function () {
 		item.circle.fill = '0aa';
 		item.text.fill = '#fff'
@@ -97,14 +116,14 @@ function create_circle (item) {
 		hovered_item = null;
 		window.removeEventListener('mousewheel', mousewheel, false);
 	})
+}
 
+var add_doubleclick_listener = function (item) {
 	item.circle.bind("dblclick", function () {
 		item_clicked = true
 		edit(item);
 		console.log(this)
 	})
-
-	return item;
 }
 
 canvas.bind("dblclick", function () {
@@ -124,24 +143,7 @@ function put_json(item, json) {
 	if (item.id === undefined) {
 		post_json(item, json)
 	} else {
-		$.ajax({
-			url: '/api/v0/items/' + item.id ,
-			type: 'PUT',
-			headers: {
-				'X-HTTP-Method-Override': 'PUT',
-				'Content-Type': 'application/json'
-			},
-			dataType: 'json',
-			data: JSON.stringify(json),
-		}).done(function() {
-			canvas.display.arc({
-				x: item.circle.x, y: item.circle.y,
-				radius: item.circle.radius * 1.1,
-				start: 0,
-				end: 360,
-				stroke: "3px #fff"
-			}).add().fadeOut();
-		});
+		ajax_json(item, json, 'PUT', item.id)
 	}
 }
 
@@ -149,24 +151,32 @@ function post_json(item, json) {
 	json.motivation = Math.round(item.motivation);
 	json.feasibility = Math.round(item.feasibility);
 	json.scale = Math.round(item.scale);
+	ajax_json(item, json, 'POST', 'new')
+}
+
+function ajax_json(item, json, put_or_post, method_or_item_id) {
 	$.ajax({
-		url: '/api/v0/items/new' ,
-		type: 'POST',
+		url: '/api/v0/items/' + method_or_item_id ,
+		type: put_or_post,
 		headers: {
-			'X-HTTP-Method-Override': 'POST',
+			'X-HTTP-Method-Override': put_or_post,
 			'Content-Type': 'application/json'
 		},
 		dataType: 'json',
 		data: JSON.stringify(json),
 	}).done(function() {
-		canvas.display.arc({
-			x: item.circle.x, y: item.circle.y,
-			radius: item.circle.radius * 1.1,
-			start: 0,
-			end: 360,
-			stroke: "3px #fff"
-		}).add().fadeOut();
+		add_orbit_to(item);
 	});
+}
+
+function add_orbit_to(item) {
+	canvas.display.arc({
+		x: item.circle.x, y: item.circle.y,
+		radius: item.circle.radius * 1.1,
+		start: 0,
+		end: 360,
+		stroke: "3px #fff"
+	}).add().fadeOut();
 }
 
 function mousewheel (event) {
@@ -175,7 +185,7 @@ function mousewheel (event) {
 	if (circle.radius > 200)
 		circle.radius = 199;
 	else if (circle.radius > 15)
-		circle.radius += event.wheelDeltaY;
+		circle.radius += (event.wheelDeltaY / 10);
 	else
 		circle.radius = 16;
 	circle.children[0].radius = circle.radius * 3.5 / 3
