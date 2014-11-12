@@ -30,6 +30,10 @@ class API < Grape::API
     put ':id' do
       Item.find(params[:id]).update!(allowed_params)
     end
+
+    delete ':id' do
+      Item.find(params[:id]).destroy
+    end
   end
 end
 

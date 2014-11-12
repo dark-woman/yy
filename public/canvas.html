@@ -28,6 +28,24 @@ var last_hovered_item;
 var radius_on_mouse;
 var coordinate_before_move = {x: 0, y: 0};
 
+var rectangle = canvas.display.rectangle({
+	x: 0,
+	y: canvas.height-103,
+	width: 100,
+	height: 100,
+	stroke: "3px #888"
+})
+canvas.addChild(rectangle);
+
+var trash_icon = canvas.display.text({
+	origin: { x: "center", y: "center" },
+	x:47, y:52,
+	font: "60px common_icons",
+	text: 'd',
+	fill: "#888",
+})
+rectangle.addChild(trash_icon);
+
 $.getJSON("/api/v0/items" , function(data) {
 	items = data;
 
@@ -75,17 +93,31 @@ function add_text (item) {
 	item.circle.addChild(item.text);
 }
 
+function trash_area(mouse) {
+	return ( mouse.x < 103 && mouse.y > (canvas.height-100) )
+}
+
 function add_drag_and_drop_listener (item) {
 	item.circle.add().dragAndDrop({
 		start: function() {
 			coordinate_before_move = {x: item.circle.x, y: item.circle.y};
 		},
+		move: function() {
+			if (trash_area(canvas.mouse))
+				item.circle.fill = '#e74c3c'
+			else
+				item.circle.fill = '#0aa'
+		},
 		end: function() {
 			if( item.circle.x != coordinate_before_move.x || item.circle.y != coordinate_before_move.y ) {
-				put_json(item, {
-					feasibility: Math.round(item.circle.x * 100 / canvas.width),
-					scale: Math.round(item.circle.y * 100 / canvas.height),
-				})
+				if (trash_area(canvas.mouse)) {
+					delete_item(item);
+				} else {
+					put_json(item, {
+						feasibility: Math.round(item.circle.x * 100 / canvas.width),
+						scale: Math.round(item.circle.y * 100 / canvas.height),
+					})
+				}
 			} else {
 				console.log(item)
 			}
@@ -139,6 +171,13 @@ canvas.bind("dblclick", function () {
 	item_clicked = false
 })
 
+function delete_item(item) {
+	ajax_json(item, null, 'DELETE', item.id)
+	item.circle.fadeOut(500, function() {
+		this.remove();
+	})
+}
+
 function put_json(item, json) {
 	if (item.id === undefined) {
 		post_json(item, json)
@@ -154,12 +193,12 @@ function post_json(item, json) {
 	ajax_json(item, json, 'POST', 'new')
 }
 
-function ajax_json(item, json, put_or_post, method_or_item_id) {
+function ajax_json(item, json, http_method, method_or_item_id) {
 	$.ajax({
 		url: '/api/v0/items/' + method_or_item_id ,
-		type: put_or_post,
+		type: http_method,
 		headers: {
-			'X-HTTP-Method-Override': put_or_post,
+			'X-HTTP-Method-Override': http_method,
 			'Content-Type': 'application/json'
 		},
 		dataType: 'json',
