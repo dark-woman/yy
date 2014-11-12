@@ -206,10 +206,6 @@ $(".title, .detail").dblclick(function() {
 	edit($(this));
 })
 
-var toggleInput = function(e) {
-	edit(e);
-};
-
 function edit(item) {
 	var el;
 	$.each([$('.detail'), $('.title')], function (i, dom) {
